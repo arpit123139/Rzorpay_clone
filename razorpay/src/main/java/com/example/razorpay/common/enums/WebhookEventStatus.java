@@ -1,0 +1,8 @@
+package com.example.razorpay.common.enums;
+
+public enum WebhookEventStatus {
+    PENDING,
+    DELIVERED,
+    FAILED,
+    DEAD
+}
