@@ -1,10 +1,13 @@
 package com.example.razorpay.payment.entity;
 
+import com.example.razorpay.common.entity.BaseEntity;
 import com.example.razorpay.common.entity.Money;
 import com.example.razorpay.common.enums.PaymentMethod;
 import com.example.razorpay.common.enums.PaymentStatus;
 import com.example.razorpay.merchant.entity.Merchant;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.springframework.cglib.core.Local;
@@ -14,8 +17,13 @@ import java.util.Map;
 import java.util.UUID;
 
 @Entity
-@Table(name = "payment")
-public class Payment {
+@Table(name = "payment",indexes = {
+        @Index(name = "idx_payment_order_id",columnList = "order_id"),
+        @Index(name = "idx_payment_merchant_id",columnList = "merchant_id")
+})
+@Getter
+@Setter
+public class Payment extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

@@ -1,5 +1,6 @@
 package com.example.razorpay.merchant.entity;
 
+import com.example.razorpay.common.entity.BaseEntity;
 import com.example.razorpay.common.enums.BusinessType;
 import com.example.razorpay.common.enums.MerchantStatus;
 import jakarta.annotation.Nullable;
@@ -12,12 +13,14 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 @Entity
-@Table(name = "merchant")
+@Table(name = "merchant",indexes = {
+        @Index(name = "idx_merchant_status",columnList = "status")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Merchant {
+public class Merchant extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

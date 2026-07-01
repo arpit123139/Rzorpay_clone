@@ -2,9 +2,15 @@ package com.example.razorpay.common.entity;
 
 import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 
 @Embeddable
+@Getter
+@NoArgsConstructor
+@Setter
 public class Money {
     private int amountUnits;
     private String currency;
