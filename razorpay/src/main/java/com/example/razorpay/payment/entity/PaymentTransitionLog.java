@@ -5,6 +5,8 @@ import com.example.razorpay.common.enums.PaymentActor;
 import com.example.razorpay.common.enums.PaymentEvent;
 import com.example.razorpay.common.enums.PaymentStatus;
 import jakarta.persistence.*;
+import lombok.*;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -13,6 +15,11 @@ import java.util.UUID;
 @Table(name = "payment_transition_log",indexes = {
         @Index(name = "idx_payment_transition_payment_id",columnList = "payment_id")
 })
+@Getter
+@Setter
+@AllArgsConstructor
+@RequiredArgsConstructor
+@Builder
 public class PaymentTransitionLog extends BaseEntity {
 
     @Id

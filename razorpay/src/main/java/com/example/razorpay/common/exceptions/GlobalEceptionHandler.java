@@ -42,4 +42,12 @@ public class GlobalEceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ErrorResponse.of(errorCode,"Input " +
                 "Validation failed ",errors));
     }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> IvalidStateTransistionException(InvalidStateTransitionException exception){
+        String errorCode = "TRANSITION_INVALID";
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ErrorResponse.of(errorCode,
+                exception.getMessage()));
+
+    }
 }

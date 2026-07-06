@@ -6,6 +6,7 @@ import com.example.razorpay.common.enums.PaymentMethod;
 import com.example.razorpay.common.enums.PaymentStatus;
 import com.example.razorpay.merchant.entity.Merchant;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -23,6 +24,7 @@ import java.util.UUID;
 })
 @Getter
 @Setter
+@Builder
 public class Payment extends BaseEntity {
 
     @Id
@@ -56,6 +58,9 @@ public class Payment extends BaseEntity {
 
     @Column(length = 100)
     private String bankReference;
+
+    @Column(length = 100)
+    private String processorReference;
 
     @Column(length = 100)
     private String errorCode;
