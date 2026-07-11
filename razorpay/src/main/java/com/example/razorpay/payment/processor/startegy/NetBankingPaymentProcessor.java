@@ -21,7 +21,7 @@ public class NetBankingPaymentProcessor implements PaymentProcessor {
 
         String redirectRef = "http://REDIRECT_BANK.com/"+processorReference;
 
-        return new PaymentProcessorResponse.Success(processorReference,redirectRef);
+        return new PaymentProcessorResponse.PendingNetBanking(processorReference,redirectRef);
 
 
     }

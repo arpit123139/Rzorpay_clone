@@ -13,6 +13,7 @@ import com.example.razorpay.payment.gateway.PaymentGatewayRouter;
 import com.example.razorpay.payment.gateway.dto.PaymentRequest;
 import com.example.razorpay.payment.gateway.dto.PaymentResult;
 import com.example.razorpay.payment.mapper.PaymentMapper;
+import com.example.razorpay.payment.processor.dto.PaymentProcessorResponse;
 import com.example.razorpay.payment.repository.OrderRepository;
 import com.example.razorpay.payment.repository.PaymentRepository;
 import com.example.razorpay.payment.service.PaymentService;
@@ -66,14 +67,25 @@ public class PaymentServiceImpl implements PaymentService {
         PaymentRequest paymentRequest=new PaymentRequest(payment.getId(),request.orderId(),merchantId,orderRecord.getAmount(),request.paymentMethod(),request.methodDetails());
         PaymentResult result= paymentGatewayRouter.initiate(paymentRequest);
 
-        if(result instanceof PaymentResult.Pending pending){
+        switch (result){
+            case PaymentResult.Pending pending -> payment.setProcessorReference(pending.registrationRef()) ;
+            case PaymentResult.PendingNetBanking pendingNetBanking -> {
+                payment.setProcessorReference(pendingNetBanking.registrationRef());
+                payment.setBankReference(pendingNetBanking.redirectRef());
+                 // We can redirect to the NetBanking website via redirectRef that is a URI recieve from the payment
+                // processor as it has the prior knowledge of all the net banking websirte we sent this to the
+                // frontend to redirect user to the website and mark the payment as Created
 
-            payment.setProcessorReference(pending.registrationRef());
-        }else if(result instanceof PaymentResult.Failure failure){
-
-            paymentTransitionService.apply(payment,PaymentEvent.AUTHORIZE_FAIL);
-            payment.setErrorCode(failure.errorCode());
-            payment.setErrorDescription(failure.errorDescription());
+            }
+            case PaymentResult.Failure failure ->{
+                paymentTransitionService.apply(payment,PaymentEvent.AUTHORIZE_FAIL);
+                payment.setErrorCode(failure.errorCode());
+                payment.setErrorDescription(failure.errorDescription());
+            }
+            case PaymentResult.Success success-> {
+                log.warn("Invalid state");
+                return null;
+            }
         }
 
         //TODO: Send an kafka event

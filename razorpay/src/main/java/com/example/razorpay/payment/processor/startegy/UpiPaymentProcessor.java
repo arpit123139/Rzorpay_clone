@@ -20,6 +20,6 @@ public class UpiPaymentProcessor implements PaymentProcessor {
 
         String bankRef = "BANK_REF"+processorReference;
 
-        return new PaymentProcessorResponse.Success(processorReference,bankRef);
+        return new PaymentProcessorResponse.Pending(processorReference);
     }
 }

@@ -4,9 +4,11 @@ import com.example.razorpay.common.enums.PaymentMethod;
 import com.example.razorpay.payment.processor.dto.PaymentProcessorRequest;
 import com.example.razorpay.payment.processor.dto.PaymentProcessorResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
+@Component
 @RequiredArgsConstructor
 public class PaymentProcessorRouter {
 
