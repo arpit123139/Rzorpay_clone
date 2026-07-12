@@ -4,14 +4,18 @@ import com.example.razorpay.common.utils.RandomizerUtil;
 import com.example.razorpay.payment.processor.PaymentProcessor;
 import com.example.razorpay.payment.processor.dto.PaymentProcessorRequest;
 import com.example.razorpay.payment.processor.dto.PaymentProcessorResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
+@Component
+@Slf4j
 public class NetBankingPaymentProcessor implements PaymentProcessor {
     @Override
     public PaymentProcessorResponse charge(PaymentProcessorRequest request) {
 
         final String BANK_CODE_FAIL = "BANK_CODE_FAIL";
 
-        String bankCode = request.methodDetails()!=null ? request.methodDetails().get("BANK").toString():null;
+        String bankCode = request.methodDetails()!=null ? request.methodDetails().get("bank").toString():null;
 
         if (bankCode.equals(BANK_CODE_FAIL)){
             return new PaymentProcessorResponse.Failure("BANK_REJECTED","Bank rejected the transaction registration");

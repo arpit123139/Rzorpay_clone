@@ -12,7 +12,7 @@ import java.util.List;
 
 @RestControllerAdvice
 @Slf4j
-public class GlobalEceptionHandler {
+public class GlobalExceptionHandler {
 
     @ExceptionHandler(DuplicateResourceException.class)
     public ResponseEntity<ErrorResponse> handleDuplicateException(DuplicateResourceException exception){
@@ -43,8 +43,8 @@ public class GlobalEceptionHandler {
                 "Validation failed ",errors));
     }
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> IvalidStateTransistionException(InvalidStateTransitionException exception){
+    @ExceptionHandler(InvalidStateTransitionException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidStateTransitionException(InvalidStateTransitionException exception){
         String errorCode = "TRANSITION_INVALID";
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ErrorResponse.of(errorCode,
                 exception.getMessage()));

@@ -1,5 +1,6 @@
 package com.example.razorpay.payment.gateway.adapter;
 
+import com.example.razorpay.common.exceptions.BuisnessRuleViolationException;
 import com.example.razorpay.payment.gateway.PaymentAdapter;
 import com.example.razorpay.payment.gateway.dto.PaymentRequest;
 import com.example.razorpay.payment.gateway.dto.PaymentResult;
@@ -28,7 +29,7 @@ public class CardPaymentAdapter implements PaymentAdapter {
             case PaymentProcessorResponse.Success success -> new PaymentResult.Success(success.bankReference());
             case PaymentProcessorResponse.Failure failure -> new PaymentResult.Failure(failure.errorCode(), failure.errorDescription());
             case PaymentProcessorResponse.Pending pending -> new PaymentResult.Pending(pending.processorReference());
-            case PaymentProcessorResponse.PendingNetBanking pendingNetBanking -> new PaymentResult.PendingNetBanking(pendingNetBanking.processorReference(), pendingNetBanking.redirectRef());
+            case PaymentProcessorResponse.PendingNetBanking pendingNetBanking-> throw new BuisnessRuleViolationException("WRONG_RESPONSE_TYPE","Wrong Response from PaymentProcessor for Card Payment") ;
         };
 
     }

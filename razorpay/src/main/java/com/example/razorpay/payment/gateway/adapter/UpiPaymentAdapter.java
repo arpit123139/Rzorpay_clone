@@ -1,5 +1,6 @@
 package com.example.razorpay.payment.gateway.adapter;
 
+import com.example.razorpay.common.exceptions.BuisnessRuleViolationException;
 import com.example.razorpay.payment.processor.PaymentProcessorRouter;
 import com.example.razorpay.payment.processor.dto.PaymentProcessorRequest;
 import com.example.razorpay.payment.processor.dto.PaymentProcessorResponse;
@@ -32,6 +33,7 @@ public class UpiPaymentAdapter implements PaymentAdapter {
             return switch (paymentProcessorResponse){
                 case PaymentProcessorResponse.Failure failure -> new PaymentResult.Failure(failure.errorCode(), failure.errorDescription()) ;
                 case PaymentProcessorResponse.Pending pending -> new PaymentResult.Pending(pending.processorReference());
+                case PaymentProcessorResponse.PendingNetBanking pendingNetBanking-> throw new BuisnessRuleViolationException("WRONG_RESPONSE_TYPE","Wrong Response from PaymentProcessor for UPI") ;
                 case PaymentProcessorResponse.Success success -> new PaymentResult.Success(success.bankReference());
             };
         } catch (Exception e) {

@@ -4,6 +4,7 @@ import com.example.razorpay.common.entity.Money;
 import com.example.razorpay.common.enums.PaymentMethod;
 import com.example.razorpay.common.enums.PaymentStatus;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -20,6 +21,7 @@ public record PaymentResponse(
         PaymentMethod method,
         Map<String,Object> methodDetails,
         String bankReference,
+        String redirectRef, // Only in case of Net Banking
         String errorCode,
         String errorDescription,
         LocalDateTime capturedAt

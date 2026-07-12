@@ -1,5 +1,8 @@
 package com.example.razorpay.common.exceptions;
 
+import lombok.Getter;
+
+@Getter
 public class InvalidStateTransitionException extends RuntimeException {
 
     private final String fromState;

@@ -20,7 +20,7 @@ public class PaymentGatewayRouter {
     public PaymentResult initiate(PaymentRequest request){
 
         PaymentAdapter adapter=paymentAdapter.get(request.paymentMethod());
-        if(adapter!=null){
+        if(adapter==null){
             throw new IllegalArgumentException("No payment Adapter registered for method:"+request.paymentMethod());
 
         }
@@ -31,7 +31,7 @@ public class PaymentGatewayRouter {
     public PaymentResult capture(PaymentMethod paymentMethod, UUID paymentId){
 
         PaymentAdapter adapter=paymentAdapter.get(paymentMethod);
-        if(adapter!=null){
+        if(adapter==null){
             throw new IllegalArgumentException("No payment Adapter registered for method:"+paymentMethod);
         }
 

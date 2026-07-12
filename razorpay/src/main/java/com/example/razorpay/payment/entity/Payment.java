@@ -6,9 +6,7 @@ import com.example.razorpay.common.enums.PaymentMethod;
 import com.example.razorpay.common.enums.PaymentStatus;
 import com.example.razorpay.merchant.entity.Merchant;
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.springframework.cglib.core.Local;
@@ -24,6 +22,8 @@ import java.util.UUID;
 })
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class Payment extends BaseEntity {
 
@@ -42,7 +42,7 @@ public class Payment extends BaseEntity {
     private Money amount;
 
     @Column(nullable = false,length = 100)
-    private String idempotenctKey;
+    private String idempotencyKey;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

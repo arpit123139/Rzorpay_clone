@@ -21,6 +21,7 @@ import com.example.razorpay.payment.stateMachine.PaymentStateMachine;
 import com.example.razorpay.payment.stateMachine.PaymentTransistionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.query.Order;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,6 +58,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .merchantId(merchantId)
                 .amount(orderRecord.getAmount())
                 .method(request.paymentMethod())
+                .idempotencyKey(UUID.randomUUID().toString())             //TODO: idempotency
                 .status(PaymentStatus.CREATED)
                 .methodDetails(request.methodDetails())
                 .build();
@@ -64,14 +66,22 @@ public class PaymentServiceImpl implements PaymentService {
         paymentRepository.save(payment);
 
         //Process the Payment
-        PaymentRequest paymentRequest=new PaymentRequest(payment.getId(),request.orderId(),merchantId,orderRecord.getAmount(),request.paymentMethod(),request.methodDetails());
+        PaymentRequest paymentRequest=new PaymentRequest(payment.getId(),
+                request.orderId(),
+                merchantId,
+                orderRecord.getAmount(),
+                request.paymentMethod(),
+                request.methodDetails());
+
+        paymentTransitionService.apply(payment, PaymentEvent.AUTHORIZE_ATTEMPT);
         PaymentResult result= paymentGatewayRouter.initiate(paymentRequest);
 
+        String redirectRef = null;
         switch (result){
             case PaymentResult.Pending pending -> payment.setProcessorReference(pending.registrationRef()) ;
             case PaymentResult.PendingNetBanking pendingNetBanking -> {
                 payment.setProcessorReference(pendingNetBanking.registrationRef());
-                payment.setBankReference(pendingNetBanking.redirectRef());
+                redirectRef = pendingNetBanking.redirectRef();
                  // We can redirect to the NetBanking website via redirectRef that is a URI recieve from the payment
                 // processor as it has the prior knowledge of all the net banking websirte we sent this to the
                 // frontend to redirect user to the website and mark the payment as Created
@@ -89,7 +99,20 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         //TODO: Send an kafka event
-        return paymentMapper.toPaymentResponse(payment);
+
+        return new PaymentResponse(payment.getId(),
+                merchantId,
+                orderRecord.getId(),
+                orderRecord.getAmount(),
+                payment.getStatus(),
+                payment.getMethod(),
+                payment.getMethodDetails(),
+                null,
+                redirectRef,            // Only for the Net Banking
+                payment.getErrorCode(),
+                payment.getErrorDescription(),
+                null
+                );
     }
 
     @Override
@@ -121,5 +144,50 @@ public class PaymentServiceImpl implements PaymentService {
         return paymentMapper.toPaymentResponse(payment);
     }
 
+    @Override
+    @Transactional
+    public void resolveAuthorization(UUID paymentId, boolean resolve, String bankRef, String errorCode, String errorDescription) {
+
+        Payment payment = paymentRepository.findById(paymentId).orElseThrow(()->new ResourceNotFoundException("Payement",paymentId.toString()));
+
+        if(payment.getStatus()!=PaymentStatus.AUTHORIZING){
+            log.warn("Payment is Not in Authorizing State");
+            return;
+        }
+
+        OrderRecord orderRecord=payment.getOrder();
+
+        if(resolve){
+            paymentTransitionService.apply(payment,PaymentEvent.AUTHORIZE_SUCCESS);
+            payment.setBankReference(bankRef);
+            payment.setAuthorizedAt(LocalDateTime.now());
+
+
+            //Auto Capture
+            paymentTransitionService.apply(payment,PaymentEvent.CAPTURE_REQUEST);
+            PaymentResult captureResult = paymentGatewayRouter.capture(payment.getMethod(),paymentId);
+
+            if(captureResult instanceof PaymentResult.Success){
+                paymentTransitionService.apply(payment,PaymentEvent.CAPTURE_SUCCESS);
+                payment.setCapturedAt(LocalDateTime.now());
+                orderRecord.setOrderStatus(OrderStatus.PAID);
+            }
+            else if(captureResult instanceof PaymentResult.Failure failure){
+                    paymentTransitionService.apply(payment,PaymentEvent.CAPTURE_FAIL);
+                    payment.setErrorCode(failure.errorCode());
+                    payment.setErrorDescription(failure.errorDescription());
+            }
+
+            //TDOO : Send an Kafka Outbox event
+        }
+        else{
+            paymentTransitionService.apply(payment, PaymentEvent.AUTHORIZE_FAIL);
+            payment.setErrorCode(errorCode);
+            payment.setErrorDescription(errorDescription);
+        }
+
+        paymentRepository.save(payment);
+        orderRepository.save(orderRecord);
+    }
 
 }
