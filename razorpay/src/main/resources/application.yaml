@@ -13,6 +13,11 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  data:
+    redis:
+      host: redis-18137.crce283.ap-south-1-2.ec2.cloud.redislabs.com
+      port: 18137
+      password: ${REDIS_PASSWORD:}
 
 vault:
   master-key: eibccbtbiklkrrbfrehknkncrjhftlug
@@ -37,3 +42,11 @@ payment:
 
 jwt:
   secret-key: eibccbtbiklkhuhhlglihrntcfdvggdfdtikfkdbkbhb
+
+
+app:
+  rate-limit:
+    method: fixed
+    use-case:
+      api-key:
+        request-per-minute: 2

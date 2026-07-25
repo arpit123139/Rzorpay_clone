@@ -8,6 +8,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestControllerAdvice
@@ -47,6 +48,25 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleInvalidStateTransitionException(InvalidStateTransitionException exception){
         String errorCode = "TRANSITION_INVALID";
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ErrorResponse.of(errorCode,
+                exception.getMessage()));
+
+    }
+
+    @ExceptionHandler(RateLimitException.class)
+    public ResponseEntity<ErrorResponse> handleRateLimitException(RateLimitException exception){
+        String errorCode="RATE_LIMIT_EXCEEDED";
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("X-RateLimit-Remaining","0")
+                .header("Retry-After",String .valueOf(exception.getReteyAfterSecond()))
+                .header("X-RateLimit-Reset",String.valueOf(LocalDateTime.now().plusSeconds(exception.getReteyAfterSecond())))
+                .body(ErrorResponse.of(errorCode,exception.getMessage()));
+
+    }
+
+    @ExceptionHandler(IdempotencyConflictException.class)
+    public ResponseEntity<ErrorResponse> handleIdempotencyConflictException(IdempotencyConflictException exception){
+        String errorCode = "CONFLICT_REQUEST";
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ErrorResponse.of(errorCode,
                 exception.getMessage()));
 
     }
