@@ -39,6 +39,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtUtil jwtUtil;
 
     @Override
+    @Transactional
     public MerchantResponse signUp(MerchantSignUpRequest request) {
         if(merchantRepository.existsByEmail(request.email())){
             throw  new DuplicateResourceException("DUPLICATE_MERCHANT_EMAIL","Merchant already exsist with email "+request.email());
@@ -66,6 +67,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public LoginResponse login(LoginRequest request) {
 
         String email = request.email();

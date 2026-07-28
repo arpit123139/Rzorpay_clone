@@ -1,6 +1,7 @@
 package com.example.razorpay.common.exceptions;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -8,6 +9,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import javax.naming.AuthenticationException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -67,6 +69,30 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleIdempotencyConflictException(IdempotencyConflictException exception){
         String errorCode = "CONFLICT_REQUEST";
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ErrorResponse.of(errorCode,
+                exception.getMessage()));
+
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleAuthenticationException(AuthenticationException exception){
+        String errorCode = "UNAUTHORIZED";
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ErrorResponse.of(errorCode,
+                exception.getMessage()));
+
+    }
+
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ErrorResponse> handleBadRequestException(BadRequestException exception){
+        String errorCode = "BAD_REQUEST";
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ErrorResponse.of(errorCode,
+                exception.getMessage()));
+
+    }
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleException(Exception exception){
+        String errorCode = "SERVER_ERROR";
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ErrorResponse.of(errorCode,
                 exception.getMessage()));
 
     }

@@ -2,10 +2,11 @@ package com.example.razorpay.merchant.dto.Response;
 
 import com.example.razorpay.common.enums.BusinessType;
 import com.example.razorpay.common.enums.MerchantStatus;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 import java.util.UUID;
-
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record MerchantResponse(
 
         UUID id,

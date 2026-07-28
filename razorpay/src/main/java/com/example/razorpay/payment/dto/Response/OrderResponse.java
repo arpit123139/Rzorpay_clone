@@ -18,6 +18,7 @@ public record OrderResponse (
         Integer attempts,
         Map<String,Object> notes,
         LocalDateTime expiresAt,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        UUID customerId
 ){
 }

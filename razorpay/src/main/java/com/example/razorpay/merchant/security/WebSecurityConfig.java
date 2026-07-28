@@ -29,6 +29,8 @@ public class WebSecurityConfig  {
     private final ApiKeyAuthenticationFilter apiKeyAuthenticationFilter;
     private final IdempotencyFilter idempotencyFilter;
 
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+
     @Bean
     @Order(1)
     public SecurityFilterChain jwtChain(HttpSecurity httpSecurity){
@@ -60,6 +62,7 @@ public class WebSecurityConfig  {
                 .authorizeHttpRequests(auth -> auth
                                 .anyRequest().authenticated()
                 )
+                .exceptionHandling(ex->ex.authenticationEntryPoint(customAuthenticationEntryPoint))
                 .addFilterBefore(apiKeyAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterAfter(idempotencyFilter, ApiKeyAuthenticationFilter.class)
                 .build();

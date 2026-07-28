@@ -35,6 +35,9 @@ public class OrderRecord extends BaseEntity {
     @Column(name = "merchant_id",nullable = false)
     private UUID merchantId;
 
+    @Column(name = "customer_id")
+    private UUID customerId;
+
     //TODO: Need to Note
     @Column(length = 100)
     private String receipt;

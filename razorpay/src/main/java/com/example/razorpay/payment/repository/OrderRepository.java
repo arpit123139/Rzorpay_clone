@@ -2,8 +2,11 @@ package com.example.razorpay.payment.repository;
 
 import com.example.razorpay.payment.dto.Response.OrderResponse;
 import com.example.razorpay.payment.entity.OrderRecord;
+import jakarta.persistence.LockModeType;
 import jakarta.validation.constraints.Size;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -14,4 +17,10 @@ public interface OrderRepository extends JpaRepository<OrderRecord, UUID> {
     boolean existsByMerchantIdAndReceipt(UUID merchantId, @Size(max=100) String receipt);
 
     Optional<OrderRecord> findByIdAndMerchantId(UUID orderId, UUID merchantId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            select o from OrderRecord o where o.id=:orderId and o.merchantId=:merchantId
+            """)
+    Optional<OrderRecord> findByIdAndMerchantIdForUpdate(UUID orderId, UUID merchantId);
 }

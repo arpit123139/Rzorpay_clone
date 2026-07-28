@@ -4,6 +4,7 @@ import com.example.razorpay.common.enums.OrderStatus;
 import com.example.razorpay.common.exceptions.BuisnessRuleViolationException;
 import com.example.razorpay.common.exceptions.DuplicateResourceException;
 import com.example.razorpay.common.exceptions.ResourceNotFoundException;
+import com.example.razorpay.merchant.service.CustomerService;
 import com.example.razorpay.payment.mapper.OrderMapper;
 import com.example.razorpay.payment.dto.Request.CreateOrderRequest;
 import com.example.razorpay.payment.dto.Response.OrderResponse;
@@ -34,6 +35,7 @@ public class OrderServiceImpl implements OrderService {
     private final PaymentRepository paymentRepository;
     private final PaymentMapper paymentMapper;
     private final OrderMapper orderMapper;
+    private final CustomerService customerService;
 
     @Value("${payment.order.default-order-expiry-minutes:30}")
     private int defaultOrderExpiryMinutes;
@@ -47,12 +49,21 @@ public class OrderServiceImpl implements OrderService {
             throw new DuplicateResourceException("ORDER_RECEIPT_DUPLICATE","Order with receipt already exsist: "+request.receipt());
         }
 
+        UUID customerId = null;
+        if(request.customer()!=null){
+            customerId = customerService.findorCreate(merchantId,
+                    request.customer().email(),
+                    request.customer().name(),
+                    request.customer().phone());
+        }
+
         OrderRecord order=OrderRecord.builder()
                 .receipt(request.receipt())
                 .amount(request.amount())
                 .notes(request.notes())
                 .merchantId(merchantId)
                 .orderStatus(OrderStatus.CREATED)
+                .customerId(customerId)
                 .expiresAt(request.expiresAt()!=null ? request.expiresAt() : LocalDateTime.now().plusMinutes(defaultOrderExpiryMinutes))
                 .build();
 

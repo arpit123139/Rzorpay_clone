@@ -20,6 +20,16 @@ public record CreateOrderRequest(
         //They give information such as user_phone , item_id etc...
         Map<String,Object> notes,
 
-        LocalDateTime expiresAt
+        LocalDateTime expiresAt,
+
+        CustomerDetails customer
 ) {
+
+        public record CustomerDetails(
+                String name,
+                String email,
+                String phone
+        ){
+
+        }
 }

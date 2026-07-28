@@ -25,7 +25,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true) // will avoid dirty checking
 public class ApiKeyServiceImpl implements ApiKeyService {
 
     private final ApiKeyRepository apiKeyRepository;
@@ -35,6 +35,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     private final ApiKeyCache apiKeyCache;
 
     @Override
+    @Transactional
     public CreateApiKeyResponse create(UUID merchantId, CreateApiKeyRequest request) {
         Merchant merchant=merchantRepository.findById(merchantId)
                 .orElseThrow( ()->new ResourceNotFoundException("merchant",merchantId));
@@ -63,6 +64,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     }
 
     @Override
+    @Transactional
     public void revoke(UUID merchantId, UUID keyId) {
 
         ApiKey key=apiKeyRepository.findById(keyId)
@@ -75,8 +77,8 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     }
 
     @Override
-    public
-    CreateApiKeyResponse rotateKey(UUID merchantId, UUID keyId) {
+    @Transactional
+    public CreateApiKeyResponse rotateKey(UUID merchantId, UUID keyId) {
         ApiKey apiKey=apiKeyRepository.findById(keyId)
                 .filter(apiKey1 -> apiKey1.getMerchant().getId().equals(merchantId))
                 .orElseThrow(()->new ResourceNotFoundException("ApiKey",keyId));
