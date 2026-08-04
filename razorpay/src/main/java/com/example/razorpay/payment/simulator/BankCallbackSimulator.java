@@ -30,7 +30,7 @@ public class BankCallbackSimulator {
     private final PaymentService paymentService;
     private final SimulatorConfig simulatorConfig;
 
-    @Scheduled(fixedDelayString = "${payment.simulator.poll-interval-ms:5000}")  // Call Methods after every 5 sec
+//    @Scheduled(fixedDelayString = "${payment.simulator.poll-interval-ms:5000}")  // Call Methods after every 5 sec
     public void processCallbacks() {
 
         LocalDateTime globalWindow = LocalDateTime.now().minusSeconds(1);

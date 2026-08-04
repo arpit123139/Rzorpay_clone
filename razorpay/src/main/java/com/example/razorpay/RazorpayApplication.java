@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableJpaAuditing(auditorAwareRef = "auditorAwareImpl")
-//@EnableScheduling
+@EnableScheduling
 public class RazorpayApplication {
 
 	public static void main(String[] args) {

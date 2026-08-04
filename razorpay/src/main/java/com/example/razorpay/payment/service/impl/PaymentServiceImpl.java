@@ -1,5 +1,6 @@
 package com.example.razorpay.payment.service.impl;
 
+import com.example.razorpay.common.enums.EventAggregateType;
 import com.example.razorpay.common.enums.OrderStatus;
 import com.example.razorpay.common.enums.PaymentEvent;
 import com.example.razorpay.common.enums.PaymentStatus;
@@ -13,6 +14,7 @@ import com.example.razorpay.payment.gateway.PaymentGatewayRouter;
 import com.example.razorpay.payment.gateway.dto.PaymentRequest;
 import com.example.razorpay.payment.gateway.dto.PaymentResult;
 import com.example.razorpay.payment.mapper.PaymentMapper;
+import com.example.razorpay.payment.outbox.OutboxEventPublisher;
 import com.example.razorpay.payment.processor.dto.PaymentProcessorResponse;
 import com.example.razorpay.payment.repository.OrderRepository;
 import com.example.razorpay.payment.repository.PaymentRepository;
@@ -27,6 +29,7 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -40,6 +43,8 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentGatewayRouter paymentGatewayRouter;
     private final PaymentMapper paymentMapper;
     private final PaymentTransistionService paymentTransitionService;
+    private final OutboxEventPublisher eventPublisher;
+
 
 
     @Override
@@ -100,7 +105,17 @@ public class PaymentServiceImpl implements PaymentService {
             }
         }
 
+        payment =paymentRepository.save(payment);
+
         //TODO: Send an kafka event
+        eventPublisher.publish(EventAggregateType.PAYMENT,payment.getId(),"PAYMENT_CREATED",
+                Map.of("orderId",orderRecord.getId().toString(),
+                        "paymentId",payment.getId().toString(),
+                        "merchantId",merchantId.toString(),
+                        "paymentStatus",payment.getStatus().name(),
+                        "amountUnits",orderRecord.getAmount().getAmountUnits(),
+                        "amountCurrency",orderRecord.getAmount().getCurrency())
+        );
 
         return new PaymentResponse(payment.getId(),
                 merchantId,
@@ -133,6 +148,9 @@ public class PaymentServiceImpl implements PaymentService {
         if(paymentResult instanceof  PaymentResult.Success success) {
             paymentTransitionService.apply(payment, PaymentEvent.CAPTURE_SUCCESS);
             payment.setCapturedAt(LocalDateTime.now());
+            OrderRecord orderRecord=payment.getOrder();
+            orderRecord.setOrderStatus(OrderStatus.PAID);
+            orderRepository.save(orderRecord);
             log.info("Payment captured, paymentID: {}", paymentId);
         } else if(paymentResult instanceof  PaymentResult.Failure failure) {
             paymentTransitionService.apply(payment, PaymentEvent.CAPTURE_FAIL);
@@ -143,7 +161,18 @@ public class PaymentServiceImpl implements PaymentService {
 
         payment = paymentRepository.save(payment);
 
+
 //        TODO: send an outbox (kafka event)
+
+        eventPublisher.publish(EventAggregateType.PAYMENT,payment.getId(),"PAYMENT_STATUS_CHANGED",
+                Map.of("orderId",payment.getOrder().getId().toString(),
+                        "paymentId",payment.getId().toString(),
+                        "merchantId",merchantId.toString(),
+                        "paymentStatus",payment.getStatus().name(),
+                        "amountUnits",payment.getAmount().getAmountUnits(),
+                        "amountCurrency",payment.getAmount().getCurrency(),
+                        "paymentMethod",payment.getMethod())
+        );
 
         return paymentMapper.toPaymentResponse(payment);
     }
@@ -192,6 +221,16 @@ public class PaymentServiceImpl implements PaymentService {
 
         paymentRepository.save(payment);
         orderRepository.save(orderRecord);
+
+        eventPublisher.publish(EventAggregateType.PAYMENT,payment.getId(),"PAYMENT_STATUS_CHANGED",
+                Map.of("orderId",payment.getOrder().getId().toString(),
+                        "paymentId",payment.getId().toString(),
+                        "merchantId",payment.getMerchantId().toString(),
+                        "paymentStatus",payment.getStatus().name(),
+                        "amountUnits",payment.getAmount().getAmountUnits(),
+                        "amountCurrency",payment.getAmount().getCurrency(),
+                        "paymentMethod",payment.getMethod())
+        );
     }
 
 }

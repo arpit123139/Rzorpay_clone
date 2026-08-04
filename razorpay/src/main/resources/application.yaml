@@ -2,7 +2,7 @@ spring:
   application:
     name: razorpay
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/razorpay}
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/razorpay-db}
     username: ${DB_USER:postgres}
     password: ${DB_PASS:Akg@1234}
   jpa:
@@ -15,9 +15,31 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
   data:
     redis:
-      host: redis-18137.crce283.ap-south-1-2.ec2.cloud.redislabs.com
-      port: 18137
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
+  kafka:
+    bootstrap-servers: ${KAFKA_BROKERS:localhost:29092}
+    producer:
+      acks: all
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        enable.idempotence: true
+        max.in.flight.request.per.connection: 5
+        retries: 3
+        spring.json.add.type.headers: false
+    consumer:
+      group-id: razorpay-monolith
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.example.razorpay.*"
+        spring.json.use.type.headers: false
+        spring.json.value.default.type: java.util.LinkedHashMap
+
 
 vault:
   master-key: eibccbtbiklkrrbfrehknkncrjhftlug
@@ -50,3 +72,9 @@ app:
     use-case:
       api-key:
         request-per-minute: 2
+  kafka:
+    topics:
+      payment: payments.event
+      order: orders.events
+      refund: refund.events
+      settlement: settlement.events
