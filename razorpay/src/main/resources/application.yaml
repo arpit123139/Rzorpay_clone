@@ -19,6 +19,8 @@ spring:
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
   kafka:
+    listener:
+      ack-mode: manual
     bootstrap-servers: ${KAFKA_BROKERS:localhost:29092}
     producer:
       acks: all
@@ -40,6 +42,9 @@ spring:
         spring.json.use.type.headers: false
         spring.json.value.default.type: java.util.LinkedHashMap
 
+threads:
+  virtual:
+    enabled: true
 
 vault:
   master-key: eibccbtbiklkrrbfrehknkncrjhftlug
@@ -72,6 +77,9 @@ app:
     use-case:
       api-key:
         request-per-minute: 2
+  webhook:
+    delivery:
+      redis-key: "webhook-retry"
   kafka:
     topics:
       payment: payments.event
