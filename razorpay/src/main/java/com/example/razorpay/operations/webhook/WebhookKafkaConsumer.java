@@ -3,22 +3,18 @@ package com.example.razorpay.operations.webhook;
 import com.example.razorpay.common.dto.WebhookTarget;
 import com.example.razorpay.common.enums.WebhookEventStatus;
 import com.example.razorpay.common.utils.SignerUtil;
-import com.example.razorpay.merchant.api.MerchantWebhookApi;
+import com.example.razorpay.merchant.api.MerchantLookupService;
 import com.example.razorpay.operations.entity.WebhookEvent;
 import com.example.razorpay.operations.repository.WebhookEventRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.hibernate.sql.results.graph.entity.internal.AbstractNonJoinedEntityFetch;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.transaction.CannotCreateTransactionException;
 import org.springframework.transaction.annotation.Transactional;
-import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
@@ -32,7 +28,7 @@ import java.util.UUID;
 public class WebhookKafkaConsumer {
     private final WebhookEventRepository webhookEventRepository;
 
-    private final MerchantWebhookApi merchantWebhookApi;
+    private final MerchantLookupService merchantLookupService;
     private final ObjectMapper objectMapper;
     private final SignerUtil signerUtil;
     private final WebhookRetryQueue retryQueue;
@@ -51,7 +47,7 @@ public class WebhookKafkaConsumer {
             Map<String, Object> data = (Map<String, Object>) envelope.get("data");
 
             String eventType = (String) envelope.get("eventType");  // Single event (ORDER_CANCELLED , PAYMENT_CREATED)
-            // COMMING FROM ORDER AND PAYMENT SERVICE
+            // COMMING FROM ORDER AND PAYMENT AND SETTLEMENT SERVICE
 
             Object merchantIdRaw = data.get("merchantId");
             if(merchantIdRaw == null)
@@ -64,7 +60,7 @@ public class WebhookKafkaConsumer {
             UUID merchantId = UUID.fromString(merchantIdRaw.toString());
 
             //get me the list of targetURL for this event Type so we can send a webhook to the merchant to this targetURL
-            List<WebhookTarget> targets = merchantWebhookApi.getActiveConfigForEvent(merchantId,eventType);
+            List<WebhookTarget> targets = merchantLookupService.getActiveConfigForEvent(merchantId,eventType);
             if(targets.isEmpty()){
                 ack.acknowledge();
                 log.info("No Webhook target  was found , skipping event: {}",eventType);

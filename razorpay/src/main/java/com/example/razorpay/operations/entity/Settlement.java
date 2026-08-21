@@ -4,12 +4,19 @@ import com.example.razorpay.common.entity.BaseEntity;
 import com.example.razorpay.common.entity.Money;
 import com.example.razorpay.common.enums.SettlementStatus;
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "settlement")
+@Builder
+@Getter
+@Setter
+@RequiredArgsConstructor
+@NoArgsConstructor
+@AllArgsConstructor
 public class Settlement extends BaseEntity {
 
     @Id
@@ -26,24 +33,28 @@ public class Settlement extends BaseEntity {
     })
     private Money grossAmount;
 
+    @Embedded
     @AttributeOverrides({
             @AttributeOverride(name = "amountUnits" , column = @Column(name = "refund_amount_units",nullable = false)),
             @AttributeOverride(name = "currency",column = @Column(name = "refund_amount_currency",nullable = false))
     })
     private Money refundAmount;
 
+    @Embedded
     @AttributeOverrides({
             @AttributeOverride(name = "amountUnits" , column = @Column(name = "fee_amount_units",nullable = false)),
             @AttributeOverride(name = "currency",column = @Column(name = "fee_amount_currency",nullable = false))
     })
     private Money feeAmount;
 
+    @Embedded
     @AttributeOverrides({
             @AttributeOverride(name = "amountUnits" , column = @Column(name = "gst_amount_units",nullable = false)),
             @AttributeOverride(name = "currency",column = @Column(name = "gst_amount_currency",nullable = false))
     })
     private Money gstAmount;
 
+    @Embedded
     @AttributeOverrides({
             @AttributeOverride(name = "amountUnits" , column = @Column(name = "net_amount_units",nullable = false)),
             @AttributeOverride(name = "currency",column = @Column(name = "net_amount_currency",nullable = false))
@@ -58,5 +69,7 @@ public class Settlement extends BaseEntity {
     private String bankReference;
 
     private LocalDateTime processedAt;
+
+    private String failureReason;
 
 }

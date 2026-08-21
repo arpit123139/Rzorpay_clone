@@ -26,4 +26,10 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
     Optional<Payment> findByIdAndMerchantIdForUpdate(UUID paymentId, UUID merchantId);
 
     List<Payment> findByStatusAndCreatedAtBefore(PaymentStatus paymentStatus, LocalDateTime globalWindow);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            select p from Payyment p where p.merchantId=:merchantId and p.status=:paymentStatus and p.settledAt IS NULL
+            """)
+    List<Payment> findByMerchantIdAndStatusForUpdate(UUID merchantId, PaymentStatus paymentStatus);
 }

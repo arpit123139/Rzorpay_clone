@@ -1,8 +1,9 @@
 package com.example.razorpay.merchant.service.Impl;
 
+import com.example.razorpay.common.enums.MerchantStatus;
 import com.example.razorpay.common.exceptions.ResourceNotFoundException;
 import com.example.razorpay.common.utils.RandomizerUtil;
-import com.example.razorpay.merchant.api.MerchantWebhookApi;
+import com.example.razorpay.merchant.api.MerchantLookupService;
 import com.example.razorpay.merchant.dto.Request.UpdateWebhookConfigRequest;
 import com.example.razorpay.merchant.dto.Response.WebhookConfigResponse;
 import com.example.razorpay.common.dto.WebhookTarget;
@@ -11,7 +12,6 @@ import com.example.razorpay.merchant.entity.MerchantWebhookConfig;
 import com.example.razorpay.merchant.mapper.WebhookConfigMapper;
 import com.example.razorpay.merchant.repository.MerchantRepository;
 import com.example.razorpay.merchant.repository.WebhookConfigRepository;
-import com.example.razorpay.merchant.security.JwtUtil;
 import com.example.razorpay.merchant.service.WebhookConfigService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.encrypt.BytesEncryptor;
@@ -24,7 +24,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class WebhookConfigServiceImpl implements WebhookConfigService, MerchantWebhookApi {
+public class WebhookConfigServiceImpl implements WebhookConfigService {
 
     private final MerchantRepository merchantRepository;
     private final WebhookConfigRepository webhookConfigRepository;
@@ -53,22 +53,5 @@ public class WebhookConfigServiceImpl implements WebhookConfigService, MerchantW
 
         return webhookConfigMapper.toWebhookConfigResponse(config,rawSecret);
     }
-
-    @Override
-    public List<WebhookTarget> getActiveConfigForEvent(UUID merchantId, String eventType) {
-        return webhookConfigRepository.findByMerchantIdAndEnabledTrue(merchantId).stream().filter(config-> config.isSubscribedTo(eventType))
-                .map(config->
-                    {
-                        byte[] cipherBytes = Base64.getDecoder().decode(config.getWebhookSecret());
-                        byte[] decryptedSecretBytes =
-                                bytesEncryptor.decrypt(cipherBytes);
-
-                       return new WebhookTarget(config.getId(),config.getTargetUrl(),
-                              new String(decryptedSecretBytes,StandardCharsets.UTF_8));
-                    }
-                    ).toList();
-                }
-
-
 
 }
