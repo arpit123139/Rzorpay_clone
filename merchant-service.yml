@@ -11,3 +11,6 @@ jwt:
 app:
   merchant-context:
     filter-enabled: true
+
+webhook:
+  secret-encryption-key: eibccbtbiklkrrbfrehknkncrjhftlug
