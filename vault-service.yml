@@ -7,3 +7,7 @@ spring:
 
 vault:
   master-key: eibccbtbiklkrrbfrehknkncrjhftlug
+
+app:
+  merchant-context:
+    filter-enabled: true

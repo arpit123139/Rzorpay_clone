@@ -1,1 +1,1 @@
-Config-server fro Razorpay
+Config-server for Razorpay

@@ -9,3 +9,7 @@ app:
   webhook:
     delivery:
       redis-key: "webhook-retry"
+
+app:
+  merchant-context:
+    filter-enabled: true
