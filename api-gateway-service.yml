@@ -35,3 +35,6 @@ spring:
               uri: lb://operations-service
               predicates:
                 - Path=/webhook/**
+
+jwt:
+  secret-key: eibccbtbiklkhuhhlglihrntcfdvggdfdtikfkdbkbhb
