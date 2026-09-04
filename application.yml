@@ -1,7 +1,4 @@
 spring:
-  datasource:
-    username: ${DB_USER:postgres}
-    password: ${DB_PASS:Akg@1234}
   jpa:
     hibernate:
       ddl-auto: update
