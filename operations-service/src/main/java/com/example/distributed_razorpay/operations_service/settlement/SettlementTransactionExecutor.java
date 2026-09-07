@@ -16,6 +16,8 @@ import com.example.distributed_razorpay.operations_service.outbox.OutboxEventPub
 import com.example.distributed_razorpay.operations_service.repository.SettlementPaymentRepository;
 import com.example.distributed_razorpay.operations_service.repository.SettlementRepository;
 import com.example.distributed_razorpay.operations_service.settlement.dto.BankTransfferResult;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -44,6 +46,8 @@ public class SettlementTransactionExecutor {
     private final double GST_RATE = 0.18;
 
     @Transactional
+    @CircuitBreaker(name = "payment-service")
+    @Retry(name = "payment-service")
     public void processForMerchant(UUID merchantId , LocalDate settlementDate){
 
             List<PaymentSettlementView> unsettledPayment = paymentServiceClient.findUnsettledCaptured(merchantId);
@@ -104,6 +108,8 @@ public class SettlementTransactionExecutor {
     }
 
     @Transactional
+    @CircuitBreaker(name = "merchant-service")
+    @Retry(name = "merchant-service")
     private void initiateBankTransffer(Settlement settlement,List<PaymentSettlementView> unsettledPayment,UUID merchantId,Money netAmount) {
         try {
 
@@ -128,6 +134,8 @@ public class SettlementTransactionExecutor {
     }
 
     @Transactional
+    @CircuitBreaker(name = "payment-service")
+    @Retry(name = "payment-service")
     public void resolveTransfer(UUID settlementId , String errorCode , String errorDescription){
 
         Settlement settlement = settlementRepository.findById(settlementId).orElseThrow(()-> new ResourceNotFoundException("Settlement ,",settlementId));

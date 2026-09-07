@@ -19,6 +19,8 @@ import com.example.distributed_razorpay.payment_service.outbox.OutboxEventPublis
 import com.example.distributed_razorpay.payment_service.repository.OrderRepository;
 import com.example.distributed_razorpay.payment_service.repository.PaymentRepository;
 import com.example.distributed_razorpay.payment_service.service.OrderService;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -49,6 +51,8 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
+    @CircuitBreaker(name = "merchant-service")
+    @Retry(name = "merchant-service")
     public OrderResponse create(UUID merchantId, CreateOrderRequest request) {
 
         if( request.receipt()!=null && orderRepository.existsByMerchantIdAndReceipt(merchantId,request.receipt())){

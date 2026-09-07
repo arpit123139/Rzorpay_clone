@@ -3,6 +3,7 @@ package com.example.distributed_razorpay.operations_service.settlement;
 import com.example.distributed_razorpay.operations_service.client.MerchantServiceClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -24,6 +25,7 @@ public class SettlementEngine {
     private final SettlementTransactionExecutor settlementTransactionExecutor;
 
     @Scheduled(cron = "0 0 23 * * *") //Every day at 11 pm
+    @SchedulerLock(name = "payment-service-settlement-engine",lockAtMostFor = "2h",lockAtLeastFor = "1m")
     public void runScheduled(){
         log.info("Nightly Settlement Running .. ");
         run();

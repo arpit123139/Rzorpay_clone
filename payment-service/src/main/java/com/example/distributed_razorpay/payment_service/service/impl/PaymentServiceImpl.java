@@ -18,6 +18,7 @@ import com.example.distributed_razorpay.payment_service.mapper.PaymentMapper;
 import com.example.distributed_razorpay.payment_service.outbox.OutboxEventPublisher;
 import com.example.distributed_razorpay.payment_service.repository.OrderRepository;
 import com.example.distributed_razorpay.payment_service.repository.PaymentRepository;
+import com.example.distributed_razorpay.payment_service.saga.PaymentAuthorizationRecorder;
 import com.example.distributed_razorpay.payment_service.service.PaymentService;
 import com.example.distributed_razorpay.payment_service.stateMachine.PaymentTransistionService;
 import lombok.RequiredArgsConstructor;
@@ -41,100 +42,35 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentMapper paymentMapper;
     private final PaymentTransistionService paymentTransitionService;
     private final OutboxEventPublisher eventPublisher;
-
-
+    private final PaymentAuthorizationRecorder paymentAuthorizationRecorder;
 
     @Override
-    @Transactional
     public PaymentResponse initiate(UUID merchantId, PaymentInitRequest request) {
 
-//        OrderRecord orderRecord=orderRepository.findByIdAndMerchantId(request.orderId(),merchantId).orElseThrow(()->new ResourceNotFoundException("Order",request.orderId()));
-        OrderRecord orderRecord=orderRepository.findByIdAndMerchantIdForUpdate(request.orderId(),merchantId).orElseThrow(()->new ResourceNotFoundException("Order",request.orderId()));
 
-        if(!(orderRecord.getOrderStatus()== OrderStatus.CREATED || orderRecord.getOrderStatus()== OrderStatus.ATTEMPTED))
-            throw new BuisnessRuleViolationException("ORDER_NOT_PAYABLE","Order cannot accept payment in status :"+orderRecord.getOrderStatus());
+        Payment payment = paymentAuthorizationRecorder.recordPayment(merchantId,request);
 
-        orderRecord.setOrderStatus(OrderStatus.ATTEMPTED);
-        orderRecord.setAttempts(orderRecord.getAttempts()+1);
-
-        Payment payment=Payment.builder()
-                .order(orderRecord)
-                .merchantId(merchantId)
-                .amount(orderRecord.getAmount())
-                .method(request.paymentMethod())
-                .idempotencyKey(UUID.randomUUID().toString())             //TODO: idempotency
-                .status(PaymentStatus.CREATED)
-                .methodDetails(request.methodDetails())
-                .build();
-
-        paymentRepository.save(payment);
-
-        //Process the Payment
         PaymentRequest paymentRequest=new PaymentRequest(payment.getId(),
                 request.orderId(),
                 merchantId,
-                orderRecord.getAmount(),
+                payment.getAmount(),
                 request.paymentMethod(),
                 request.methodDetails());
 
-        paymentTransitionService.apply(payment, PaymentEvent.AUTHORIZE_ATTEMPT);
-        PaymentResult result= paymentGatewayRouter.initiate(paymentRequest);
+        PaymentResult result;
 
-        String redirectRef = null;
-        switch (result){
-            case PaymentResult.Pending pending -> payment.setProcessorReference(pending.registrationRef()) ;
-            case PaymentResult.PendingNetBanking pendingNetBanking -> {
-                payment.setProcessorReference(pendingNetBanking.registrationRef());
-                redirectRef = pendingNetBanking.redirectRef();
-                 // We can redirect to the NetBanking website via redirectRef that is a URI recieve from the payment
-                // processor as it has the prior knowledge of all the net banking websirte we sent this to the
-                // frontend to redirect user to the website and mark the payment as Created
-
-            }
-            case PaymentResult.Failure failure ->{
-                paymentTransitionService.apply(payment,PaymentEvent.AUTHORIZE_FAIL);
-                payment.setErrorCode(failure.errorCode());
-                payment.setErrorDescription(failure.errorDescription());
-            }
-            case PaymentResult.Success success-> {
-                log.warn("Invalid state");
-                return null;
-            }
+        try{
+            result = paymentGatewayRouter.initiate(paymentRequest);
+        } catch (Exception e) {
+            return paymentAuthorizationRecorder.compensateAuthorizedFailure(payment.getId(),"PAYMENT_GATEWAY_ROUTER_UNREACHABLE",e.getMessage(),null);
         }
 
-        payment =paymentRepository.save(payment);
-
-        //TODO: Send an kafka event
-        eventPublisher.publish(EventAggregateType.PAYMENT,payment.getId(),"PAYMENT_CREATED",
-                Map.of("orderId",orderRecord.getId().toString(),
-                        "paymentId",payment.getId().toString(),
-                        "merchantId",merchantId.toString(),
-                        "paymentStatus",payment.getStatus().name(),
-                        "amountUnits",orderRecord.getAmount().getAmountUnits(),
-                        "amountCurrency",orderRecord.getAmount().getCurrency())
-        );
-
-        return new PaymentResponse(payment.getId(),
-                merchantId,
-                orderRecord.getId(),
-                orderRecord.getAmount(),
-                payment.getStatus(),
-                payment.getMethod(),
-                payment.getMethodDetails(),
-                null,
-                redirectRef,            // Only for the Net Banking
-                payment.getErrorCode(),
-                payment.getErrorDescription(),
-                null
-                );
+       return paymentAuthorizationRecorder.applyGatewayResult(payment.getId(),result);
     }
 
     @Override
     @Transactional
     public PaymentResponse capture(UUID merchantId, UUID paymentId) {
-
-//        Payment payment = paymentRepository.findByIdAndMerchantId(paymentId, merchantId)
-//                .orElseThrow(() -> new ResourceNotFoundException("Payment", paymentId));
 
         Payment payment = paymentRepository.findByIdAndMerchantIdForUpdate(paymentId, merchantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment", paymentId));

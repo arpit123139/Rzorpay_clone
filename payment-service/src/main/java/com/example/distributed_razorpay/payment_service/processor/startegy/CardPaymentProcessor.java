@@ -5,6 +5,7 @@ import com.example.distributed_razorpay.common_lib.utils.RandomizerUtil;
 import com.example.distributed_razorpay.payment_service.processor.PaymentProcessor;
 import com.example.distributed_razorpay.common_lib.dto.PaymentProcessorRequest;
 import com.example.distributed_razorpay.common_lib.dto.PaymentProcessorResponse;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 

@@ -6,12 +6,14 @@ import com.example.distributed_razorpay.payment_service.entity.OutboxEvent;
 import com.example.distributed_razorpay.payment_service.repository.OutBoxEventRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
+@Transactional
 public class OutboxEventPublisher {
 
     private final OutBoxEventRepository outBoxEventRepository;
