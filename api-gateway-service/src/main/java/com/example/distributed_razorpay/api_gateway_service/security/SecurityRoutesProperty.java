@@ -1,0 +1,15 @@
+package com.example.distributed_razorpay.api_gateway_service.security;
+
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import java.util.List;
+
+@Getter
+@Setter
+@ConfigurationProperties(prefix = "app.security")
+public class SecurityRoutesProperty {
+
+    private List<String> publicRoutes = List.of();
+}

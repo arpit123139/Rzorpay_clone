@@ -1,0 +1,7 @@
+com.example.distributed_razorpay.common_lib.config.SharedKafkaAutoConfiguration
+com.example.distributed_razorpay.common_lib.audit.SharedAuditAutoConfiguration
+com.example.distributed_razorpay.common_lib.exceptions.SharedExceptionAutoConfiguration
+com.example.distributed_razorpay.common_lib.utils.SharedSecurityAutoConfiguration
+com.example.distributed_razorpay.common_lib.idempotency.SharedResilienceAutoConfiguration
+com.example.distributed_razorpay.common_lib.web.SharedWebFilterAutoConfiguration
+com.example.distributed_razorpay.common_lib.cache.SharedCacheAutoConfiguration

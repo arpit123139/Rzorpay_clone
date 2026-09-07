@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: config-service
+  cloud:
+    config.server.git:
+      uri: https://github.com/arpit123139/Rzorpay_clone
+      username: arpit123139
+      password: ${GITHUB_PAT}
+      default-label: config-server
+
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: health,info
+    health:
+      config:
+        enabled: false
+
+server.port: 8888
