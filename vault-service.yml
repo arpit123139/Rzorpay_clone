@@ -21,3 +21,11 @@ vault:
 app:
   merchant-context:
     filter-enabled: true
+
+resilience4j:
+  thread-pool-bulkhead:
+    instances:
+      vault-card-processor:
+        core-thread-pool-size: 5
+        max-thread-pool-size: 10
+        queue-capacity: 20
