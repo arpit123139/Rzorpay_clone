@@ -35,6 +35,8 @@ spring:
               uri: lb://operations-service
               predicates:
                 - Path=/webhook/**
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/razorpay-merchant-db}
 
 jwt:
   secret-key: eibccbtbiklkhuhhlglihrntcfdvggdfdtikfkdbkbhb
