@@ -12,6 +12,7 @@ import com.example.distributed_razorpay.payment_service.entity.OrderRecord;
 import com.example.distributed_razorpay.payment_service.entity.Payment;
 import com.example.distributed_razorpay.payment_service.gateway.dto.PaymentRequest;
 import com.example.distributed_razorpay.payment_service.gateway.dto.PaymentResult;
+import com.example.distributed_razorpay.payment_service.mapper.PaymentMapper;
 import com.example.distributed_razorpay.payment_service.outbox.OutboxEventPublisher;
 import com.example.distributed_razorpay.payment_service.repository.OrderRepository;
 import com.example.distributed_razorpay.payment_service.repository.PaymentRepository;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -34,10 +36,11 @@ public class PaymentAuthorizationRecorder {
     private final PaymentRepository paymentRepository;
     private final PaymentTransistionService paymentTransitionService;
     private final OutboxEventPublisher eventPublisher;
+    private final PaymentMapper paymentMapper;
 
 
     @Transactional
-    public Payment recordPayment(UUID merchantId, PaymentInitRequest request){
+    public Payment recordPayment(UUID merchantId, PaymentInitRequest request,String idempotencyKey){
 
         OrderRecord orderRecord=orderRepository.findByIdAndMerchantIdForUpdate(request.orderId(),merchantId).orElseThrow(()->new ResourceNotFoundException("Order",request.orderId()));
 
@@ -52,7 +55,7 @@ public class PaymentAuthorizationRecorder {
                 .merchantId(merchantId)
                 .amount(orderRecord.getAmount())
                 .method(request.paymentMethod())
-                .idempotencyKey(UUID.randomUUID().toString())             //TODO: idempotency
+                .idempotencyKey(idempotencyKey)
                 .status(PaymentStatus.CREATED)
                 .methodDetails(request.methodDetails())
                 .build();
@@ -154,6 +157,11 @@ public class PaymentAuthorizationRecorder {
                 payment.getErrorDescription(),
                 null
         );
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<PaymentResponse> findExsistingAttempt(UUID merchantId,String idempotencyKey){
+        return paymentRepository.findByMerchantIdAndIdempotencyKey(merchantId,idempotencyKey).map(payment -> paymentMapper.toPaymentResponse(payment));
     }
 
 }

@@ -9,7 +9,7 @@ import java.util.UUID;
 
 public interface PaymentService {
 
-    PaymentResponse initiate(UUID merchantId, PaymentInitRequest paymentInitRequest);
+    PaymentResponse initiate(UUID merchantId, PaymentInitRequest paymentInitRequest,String IdempotencyKey);
 
      PaymentResponse capture(UUID merchantId, UUID paymentId);
 

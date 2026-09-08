@@ -30,7 +30,9 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
-            select p from Payyment p where p.merchantId=:merchantId and p.status=:paymentStatus and p.settledAt IS NULL
+            select p from Payment p where p.merchantId=:merchantId and p.status=:paymentStatus and p.settledAt IS NULL
             """)
     List<Payment> findByMerchantIdAndStatusForUpdate(UUID merchantId, PaymentStatus paymentStatus);
+
+    Optional<Payment> findByMerchantIdAndIdempotencyKey(UUID merchantId, String idempotencyKey);
 }
