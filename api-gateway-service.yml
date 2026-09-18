@@ -20,19 +20,19 @@ spring:
         webmvc:
           routes:
             - id: merchant-service
-              uri: lb://merchant-service
+              uri: ${MERCHANT_SERVICE_URI:lb://merchant-service}
               predicates:
                 - Path=/v1/auth/**, /v1/merchants/**
-            - id: payment-service
+            - id: ${PAYMENT_SERVICE_URI:lb://payment-service}
               uri: lb://payment-service
               predicates:
                 - Path=/v1/orders/**, /v1/payments/**
             - id: vault-service
-              uri: lb://vault-service
+              uri: ${VAULT_SERVICE_URI:lb://vault-service}
               predicates:
                 - Path=/v1/vault/**
             - id: operations-service
-              uri: lb://operations-service
+              uri: ${OPERATIONS_SERVICE_URI:lb://operations-service}
               predicates:
                 - Path=/webhook/**
   datasource:
@@ -48,3 +48,12 @@ spring:
 
 jwt:
   secret-key: eibccbtbiklkhuhhlglihrntcfdvggdfdtikfkdbkbhb
+
+---
+spring:
+  config:
+    activate:
+      on-profile: k8s
+
+jwt:
+  secret-key: ${JWT_SECRET}

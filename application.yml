@@ -12,7 +12,9 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
-
+  datasource:
+    hikari:
+      maximum-pool-size: 50
   eureka:
     client:
       serviceUrl:
@@ -55,7 +57,7 @@ spring:
 payment:
   simulator:
     poll-interval-ms: 5000
-    chaos-mode: FAILURE
+    chaos-mode: NORMAL
     methods:
       CARD:
         min-delay-seconds: 2
@@ -90,7 +92,7 @@ management:
         include: health,info,prometheus
   tracing:
     sampling:
-      probability: 1.0
+      probability: 0.1
   zipkin:
     tracing:
       endpoint: http://localhost:9411/api/v2/spans
@@ -102,3 +104,48 @@ logging:
   level:
     org.apache.kafka.clients: WARN
     org.apache.kafka.common: WARN
+
+---
+spring:
+  config:
+    activate:
+      on-profile: k8s
+  data:
+    redis:
+      host: redis.razorpay-core.svc.cluster.local
+      port: 6379
+  kafka:
+    bootstrap-servers: kafka.razorpay-core.svc.cluster.local:9092
+  cloud:
+    discovery:
+      enabled: false
+  task:
+    scheduling:
+      pool:
+        size: 4 #By default only 1 scheduler is allowed to run in a service
+
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
+management:
+  zipkin:
+    tracing:
+      endpoint: http://zipkin.razorpay-core.svc.cluster.local:9411/api/v2/spans
+
+feign:
+  httpclient:
+    hc5:
+      enabled: true
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+
+MERCHANT_SERVICE_URI: http://merchant-service
+PAYMENT_SERVICE_URI: http://payment-service
+VAULT_SERVICE_URI: http://vault-service
+OPERATIONS_SERVICE_URI: http://operations-service
