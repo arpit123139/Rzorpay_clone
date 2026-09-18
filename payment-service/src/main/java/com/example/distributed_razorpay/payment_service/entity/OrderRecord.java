@@ -15,7 +15,8 @@ import java.util.UUID;
 @Entity
 @Table(name = "order_record",indexes = {
         @Index(name = "idx_order_id_merchant_id",columnList = "id, merchant_id"),
-        @Index(name = "idx_order_merchant_id",columnList = "merchant_id")
+        @Index(name = "idx_order_merchant_id",columnList = "merchant_id"),
+        @Index(name = "idx_order_merchant_receipt",columnList = "merchant_id, receipt",unique = true)
 })
 @Getter
 @Setter
@@ -37,7 +38,6 @@ public class OrderRecord extends BaseEntity {
     @Column(name = "customer_id")
     private UUID customerId;
 
-    //TODO: Need to Note
     @Column(length = 100)
     private String receipt;
 
